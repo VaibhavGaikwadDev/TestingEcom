@@ -79,7 +79,7 @@ exports.resetPasswordRequest = async (req, res) => {
 
     // Also set token in email
     const resetPageLink =
-      // 'http://localhost:3000/reset-password?token=' + token + '&email=' + email;
+      'http://localhost:3000/reset-password?token=' + token + '&email=' + email;
       '/reset-password?token=' + token + '&email=' + email;
 
     const subject = 'reset password for e-commerce';
