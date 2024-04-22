@@ -237,7 +237,7 @@ server.post('/create-payment-intent', async (req, res) => {
     currency: 'inr',
     payment_method: 'pm_card_visa',
     automatic_payment_methods: {
-      enabled: false,
+      enabled: true,
     },
     metadata: {
       orderId,
