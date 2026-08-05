@@ -24,6 +24,8 @@ const { isAuth, sanitizeUser, cookieExtractor } = require('./services/common');
 const path = require('path');
 const { Order } = require('./model/Order');
 const { env } = require('process');
+// This is your test secret API key.
+const stripe = require('stripe')(process.env.STRIPE_SERVER_KEY);
 
 // Webhook
 
@@ -224,9 +226,6 @@ passport.deserializeUser(function (user, cb) {
 });
 
 // Payments
-
-// This is your test secret API key.
-const stripe = require('stripe')(process.env.STRIPE_SERVER_KEY);
 
 server.post('/create-payment-intent', async (req, res) => {
   const { totalAmount, orderId } = req.body;
