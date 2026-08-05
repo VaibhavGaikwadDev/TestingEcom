@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const server = express();
 const mongoose = require('mongoose');
+const connectDB = require('./config/db');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
@@ -9,7 +10,6 @@ const LocalStrategy = require('passport-local').Strategy;
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const JwtStrategy = require('passport-jwt').Strategy;
-const ExtractJwt = require('passport-jwt').ExtractJwt;
 const cookieParser = require('cookie-parser');
 const { createProduct } = require('./controller/Product');
 const productsRouter = require('./routes/Products');
@@ -166,7 +166,9 @@ passport.use(
     // by default passport uses username
     console.log({ email, password });
     try {
-      const user = await User.findOne({ email: email });
+      console.log("Mongo Ready State:", mongoose.connection.readyState);
+      const user = await User.findOne({ email });
+      console.log("User Found:", !!user);
       console.log(email, password, user);
       if (!user) {
         return done(null, false, { message: 'invalid credentials' }); // for safety
@@ -189,7 +191,8 @@ passport.use(
         }
       );
     } catch (err) {
-      done(err);
+      console.error("Login Error:", err);
+      return done(err);
     }
   })
 );
@@ -228,6 +231,7 @@ passport.deserializeUser(function (user, cb) {
 // Payments
 
 server.post('/create-payment-intent', async (req, res) => {
+  try {
   const { totalAmount, orderId } = req.body;
 
   // Create a PaymentIntent with the order amount and currency
@@ -242,19 +246,27 @@ server.post('/create-payment-intent', async (req, res) => {
       orderId,
     },
   });
-
-  res.send({
-    clientSecret: paymentIntent.client_secret,
-  });
+res.send({
+  clientSecret: paymentIntent.client_secret,
 });
+} catch (err) {
+  console.error(err);
+  res.status(500).json({
+    message: "Payment Intent Failed",
+  });
+}
+});
+async function startServer() {
+  try {
+    await connectDB();
 
-main().catch((err) => console.log(err));
-
-async function main() {
-  await mongoose.connect(process.env.MONGODB_URL);
-  console.log('database connected');
+    server.listen(process.env.PORT, () => {
+      console.log(`🚀 Server running on port ${process.env.PORT}`);
+    });
+  } catch (err) {
+    console.error("Server Startup Failed:", err);
+    process.exit(1);
+  }
 }
 
-server.listen(process.env.PORT, () => {
-  console.log('server started');
-});
+startServer();
